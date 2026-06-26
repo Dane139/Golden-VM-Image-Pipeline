@@ -36,14 +36,14 @@ jobs:
       - name: Packer Init
         working-directory: packer
         run: packer init rhel9.pkr.hcl
- 
+
       - name: Packer Validate
         working-directory: packer
         env:
           PKR_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           PKR_VAR_resource_group: ${{ secrets.AZURE_RESOURCE_GROUP }}
-        run: packer validate -var-file=variables.pkrvars.hcl rhel9.pkr.hcl
- 
+        run: packer validate rhel9.pkr.hcl
+
       - name: Packer Build
         working-directory: packer
         env:
@@ -56,14 +56,14 @@ jobs:
             -color=false \
             -timestamp-ui \
             rhel9.pkr.hcl
- 
+
       - name: Upload Build Manifest
         uses: actions/upload-artifact@v4
         with:
           name: packer-manifest-${{ github.run_number }}
           path: packer/manifest.json
           retention-days: 90
- 
+
       - name: Report Image Version
         run: |
           echo "Image published to: ${{ env.GALLERY_NAME }}"
