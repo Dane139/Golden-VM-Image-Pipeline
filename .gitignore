@@ -12,6 +12,7 @@
 
 # Packer build artifacts
 manifest.json
+manifest.json.lock
 packer_cache/
 
 # OS noise
