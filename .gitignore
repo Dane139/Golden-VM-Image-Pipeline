@@ -1,0 +1,19 @@
+# Packer variable files (contain subscription ID)
+*.pkrvars.hcl
+
+# Terraform variable files (contain credentials/sensitive values)
+*.tfvars
+
+# Terraform state (can contain secrets in plaintext)
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+
+# Packer build artifacts
+manifest.json
+packer_cache/
+
+# OS noise
+.DS_Store
+Thumbs.db

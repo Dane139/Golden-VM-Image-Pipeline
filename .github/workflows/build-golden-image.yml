@@ -1,0 +1,75 @@
+name: Build Golden VM Image
+ 
+on:
+  # Run on a schedule — every Sunday at 2 AM UTC
+  schedule:
+    - cron: '0 2 * * 0'
+  # Allow manual trigger from the GitHub UI
+  workflow_dispatch:
+ 
+env:
+  PACKER_VERSION: "1.10.0"
+  IMAGE_DEFINITION: "rhel-9-cis"
+  GALLERY_NAME: "gal_golden_images"
+ 
+jobs:
+  build:
+    name: Build and Publish Golden Image
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}"}'
+
+      - name: Install Packer
+        run: |
+          wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+          sudo apt-get update && sudo apt-get install -y packer
+          packer --version
+ 
+      - name: Packer Init
+        working-directory: packer
+        run: packer init rhel9.pkr.hcl
+ 
+      - name: Packer Validate
+        working-directory: packer
+        env:
+          PKR_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          PKR_VAR_resource_group: ${{ secrets.AZURE_RESOURCE_GROUP }}
+        run: packer validate -var-file=variables.pkrvars.hcl rhel9.pkr.hcl
+ 
+      - name: Packer Build
+        working-directory: packer
+        env:
+          PKR_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          PKR_VAR_resource_group: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          PKR_VAR_gallery_name: ${{ env.GALLERY_NAME }}
+          PKR_VAR_image_definition: ${{ env.IMAGE_DEFINITION }}
+        run: |
+          packer build \
+            -color=false \
+            -timestamp-ui \
+            rhel9.pkr.hcl
+ 
+      - name: Upload Build Manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: packer-manifest-${{ github.run_number }}
+          path: packer/manifest.json
+          retention-days: 90
+ 
+      - name: Report Image Version
+        run: |
+          echo "Image published to: ${{ env.GALLERY_NAME }}"
+          az sig image-version list \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --gallery-name ${{ env.GALLERY_NAME }} \
+            --gallery-image-definition ${{ env.IMAGE_DEFINITION }} \
+            --query "[].{Version:name, State:provisioningState}" \
+            --output table
