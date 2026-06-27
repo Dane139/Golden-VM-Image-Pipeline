@@ -10,7 +10,7 @@ on:
 env:
   PACKER_VERSION: "1.10.0"
   IMAGE_DEFINITION: "rhel-9-cis"
-  GALLERY_NAME: "gal_golden_images"
+  GALLERY_NAME: "gal_golden_images_dane"
  
 jobs:
   build:
