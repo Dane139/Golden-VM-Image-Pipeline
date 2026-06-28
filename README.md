@@ -2,8 +2,9 @@
 ### Packer + GitHub Actions + Azure Compute Gallery | CIS-Hardened RHEL 9
 
 
-**[▶ Watch me build this on Loom](Video coming soon)**
+**[▶ Watch me build this on Loom](https://www.loom.com/share/f3673156fe2f40d1b87abc0c23e3165e)**
 
+---
 
 **Author:** Dane Willms [LinkedIn](https://www.linkedin.com/in/dane-willms-3612a9281/)
 
